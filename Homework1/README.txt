@@ -1,0 +1,1 @@
+Code was written in jupyter notebooks. Notebooks were ran on google colab and Palmetto Cluster. If jupyter notebook is ran in Cluster, then make sure that "pip install jupyterlab requests" is ran before torch is installed.
