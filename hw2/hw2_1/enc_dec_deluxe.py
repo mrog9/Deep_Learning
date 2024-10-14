@@ -128,7 +128,7 @@ def findSequence(dec_self, best_word, hid_st, cont_st, seq_len=3):
         
         output, (hn, cn) = dec_self.lstm(input_word, (hn, cn))
         lin_outs = dec_self.classify(output)
-        prob_out = F.softmax(lin_outs)
+        prob_out = F.softmax(lin_outs, dim=-1)
         input_word = getWord(prob_out)
         hn_list.append(hn)
         seq_list.append(prob_out)

@@ -4,6 +4,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.transforms as transforms
 
+import cv2
+
 import numpy as np
 import pandas as pd
 import json
@@ -14,8 +16,6 @@ import enc_dec_deluxe
 
 
 def convert_avi(file_path):
-    
-    file_path = "./avi_data/MLDS_hw2_1_data/training_data/video/" + file_str
     
     cap = cv2.VideoCapture(file_path)
     frames = []
@@ -55,7 +55,9 @@ def pred_to_sent(pred, rev_vocab):
     
     for ind in inds:
         
-        word_lst.append(rev_vocab[ind.item()])
+        key = str(ind.item())
+        
+        word_lst.append(rev_vocab[key])
     
     sent = ""
 
@@ -68,8 +70,7 @@ def pred_to_sent(pred, rev_vocab):
 
 
 def judge(three_inf_sent_tens):
-    
-    criterion = nn.CrossEntropyLoss()
+
     max_sum = 0
     ind = 0
     best_ind = 0
@@ -90,7 +91,7 @@ def judge(three_inf_sent_tens):
          
         ind += 1
     
-    chosen_tens = three_inf_sent_tens[ind]
+    chosen_tens = three_inf_sent_tens[best_ind]
     
     return chosen_tens
 
@@ -102,7 +103,12 @@ def judge(three_inf_sent_tens):
 dir_path = sys.argv[1]
 out_file = sys.argv[2]
 
-vocab, rev_vocab, vocab_len, _ = enc_dec_deluxe.vocab_function()
+path_to_id = dir_path + "/id.txt"
+
+with open('vocab.json', 'r') as json_file:
+    rev_vocab = json.load(json_file)
+    
+vocab_len = len(rev_vocab)
 
 pre_cnn = enc_dec_deluxe.Pretrained_CNN()
 encoder = enc_dec_deluxe.Encoder(10*2*2, 50, 1)
@@ -112,11 +118,11 @@ mainModel = enc_dec_deluxe.Enc_Dec_Model(pre_cnn, encoder, decoder)
 mainModel.load_state_dict(torch.load("encoder_decoder_model_deluxe.pth", weights_only = True))
 mainModel.eval()
 
-with open('id.txt', 'r') as file:
+with open(path_to_id, 'r') as file:
     for line in file:
         file_nm = line.strip()
         
-        file_path = dir_path + "/" + file_nm
+        file_path = dir_path + "/video/" + file_nm
         
         in_tens = convert_avi(file_path)
         
@@ -130,9 +136,9 @@ with open('id.txt', 'r') as file:
 
         sent = pred_to_sent(pred, rev_vocab)
 
-        with open('out_file', 'w') as file:
+        with open(out_file, 'a') as file:
             
-            out_line = file_nm +',' + sent +'\n'
+            out_line = file_nm +', ' + sent +'\n'
             
             file.write(out_line)
         
